@@ -69,7 +69,6 @@ body {
   font-family: monospace;
 }
 
-/* BG floating 67s */
 .sixseven-bg {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -90,7 +89,6 @@ body {
   100% { transform: translateY(-120vh) rotate(360deg); }
 }
 
-/* Particles */
 .chaos-particle {
   position: fixed;
   pointer-events: none;
@@ -105,7 +103,6 @@ body {
   100% { transform: translateY(-120vh) rotate(720deg) scale(2.5); opacity: 0; }
 }
 
-/* Rainbow text */
 .rainbow-text {
   background: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00ff00, #00ffff, #0088ff, #ff00ff, #ff0000);
   background-size: 200%;
@@ -127,7 +124,6 @@ body {
   to   { transform: scale(1.08); }
 }
 
-/* Closing overlay */
 #closing-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -201,7 +197,6 @@ function triggerExplosion() {
   display.style.fontSize   = '100px';
   display.style.fontWeight = '900';
 
-  // Background floating 67s
   const bgInterval = setInterval(() => {
     const chars  = ['67','67','67','六七','LXVII','67!','✦67✦','⚡67⚡'];
     const clrs   = ['#ff0055','#ff8800','#ffee00','#00ff88','#00cfff','#cc44ff'];
@@ -220,7 +215,6 @@ function triggerExplosion() {
       bgContainer.removeChild(bgContainer.children[0]);
   }, 200);
 
-  // Particles
   const particleInterval = setInterval(() => {
     const texts = ['67','67!!','SESSANTASETTE','67°','✦67✦','#67','[67]','67!','67?!'];
     const p = document.createElement('div');
@@ -235,14 +229,12 @@ function triggerExplosion() {
     setTimeout(() => p.remove(), 5000);
   }, 120);
 
-  // Background color cycle
   let bgIdx = 0;
   const bgCycle = setInterval(() => {
     document.body.style.background = bgs[bgIdx % bgs.length];
     bgIdx++;
   }, 400);
 
-  // Display text cycle
   const displayTexts = ['67','SESSANTASETTE','67','THE NUMBER','67','TUFF','67','❗67❗'];
   let dtIdx = 0;
   const textCycle = setInterval(() => {
@@ -251,7 +243,6 @@ function triggerExplosion() {
     dtIdx++;
   }, 300);
 
-  // After 8s → close
   setTimeout(() => {
     clearInterval(bgInterval);
     clearInterval(particleInterval);
@@ -259,6 +250,27 @@ function triggerExplosion() {
     clearInterval(textCycle);
     startClosing();
   }, 8000);
+}
+
+function selfDestruct() {
+  // Prova a chiudere la tab (funziona se aperta via window.open)
+  window.close();
+
+  // Fallback: rimpiazza l'intera pagina con una schermata nera vuota
+  // usando document.open/write che resetta completamente il documento
+  setTimeout(() => {
+    try {
+      document.open();
+      document.write('');
+      document.close();
+      document.documentElement.remove();
+    } catch(e) {}
+
+    // Ultimo fallback: body completamente svuotato e nero
+    document.body.innerHTML = '';
+    document.body.style.cssText = 'background:#000;margin:0;padding:0;width:100vw;height:100vh;overflow:hidden;';
+    document.title = '';
+  }, 100);
 }
 
 function startClosing() {
@@ -289,7 +301,7 @@ function startClosing() {
           clearInterval(dotInterval);
           setTimeout(() => {
             msg.innerHTML += '<br><br><span style="font-size:14px;opacity:0.5;">( il sito si è autodistrutto )</span>';
-            setTimeout(() => { document.body.innerHTML = ''; }, 2000);
+            setTimeout(selfDestruct, 2000);
           }, 500);
         }
       }, 500);
