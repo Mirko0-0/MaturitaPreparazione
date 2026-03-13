@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Palle Sgonfie</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:ital@1&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0f;
+      --c1: #e8c84a;
+      --c2: #e84a6f;
+      --c3: #4ae8c8;
+      --c4: #a84ae8;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      cursor: none;
+    }
+
+    /* Noise overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 100; opacity: 0.5;
+    }
+
+    /* SVG balloon canvas */
+    #balloons {
+      position: fixed; inset: 0;
+      width: 100%; height: 100%;
+      z-index: 1;
+    }
+
+    /* Scene container */
+    #scene {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 10;
+    }
+
+    /* Main text */
+    .title-wrap {
+      position: relative;
+      text-align: center;
+    }
+
+    .title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(5rem, 16vw, 14rem);
+      line-height: 0.88;
+      letter-spacing: 0.03em;
+      color: transparent;
+      -webkit-text-stroke: 2px rgba(255,255,255,0.15);
+      position: relative;
+      z-index: 2;
+      user-select: none;
+      animation: titleIn 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .title span {
+      display: block;
+    }
+
+    .title .line1 {
+      color: var(--c1);
+      -webkit-text-stroke: 0;
+      text-shadow:
+        0 0 80px rgba(232,200,74,0.4),
+        0 0 160px rgba(232,200,74,0.15);
+      animation: titleIn 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both, deflate 3.5s ease-in-out 2s infinite;
+    }
+
+    .title .line2 {
+      color: transparent;
+      -webkit-text-stroke: 3px var(--c2);
+      text-shadow:
+        0 0 60px rgba(232,74,111,0.3);
+      animation: titleIn 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both, deflate2 4s ease-in-out 2.5s infinite;
+    }
+
+    @keyframes titleIn {
+      from { opacity: 0; transform: translateY(60px) scaleY(1.3); filter: blur(20px); }
+      to { opacity: 1; transform: translateY(0) scaleY(1); filter: blur(0); }
+    }
+
+    @keyframes deflate {
+      0%, 100% { transform: scaleX(1) scaleY(1); }
+      30% { transform: scaleX(1.04) scaleY(0.94); }
+      60% { transform: scaleX(0.96) scaleY(1.03); }
+    }
+
+    @keyframes deflate2 {
+      0%, 100% { transform: scaleX(1) scaleY(1); }
+      40% { transform: scaleX(0.97) scaleY(1.05); }
+      70% { transform: scaleX(1.03) scaleY(0.95); }
+    }
+
+    /* Subtitle */
+    .subtitle {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: clamp(0.85rem, 2.5vw, 1.4rem);
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0.25em;
+      margin-top: 2rem;
+      animation: fadeUp 1.2s ease 0.8s both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Air particles */
+    .particle {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 5;
+      animation: floatAway var(--dur) ease-out var(--delay) infinite;
+    }
+
+    @keyframes floatAway {
+      0% { transform: translate(0,0) scale(1); opacity: 0.7; }
+      100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+    }
+
+    /* Custom cursor */
+    #cursor {
+      position: fixed;
+      width: 20px; height: 20px;
+      border: 2px solid var(--c1);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: width 0.2s, height 0.2s, background 0.2s;
+      mix-blend-mode: difference;
+    }
+
+    #cursor.pop {
+      width: 50px; height: 50px;
+      background: rgba(232,200,74,0.2);
+    }
+
+    /* Pop flash */
+    .flash {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 50;
+      transform: translate(-50%, -50%) scale(0);
+      animation: popFlash 0.5s ease-out forwards;
+    }
+
+    @keyframes popFlash {
+      0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+      100% { transform: translate(-50%,-50%) scale(3); opacity: 0; }
+    }
+
+    /* Scanlines */
+    #scanlines {
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.06) 2px,
+        rgba(0,0,0,0.06) 4px
+      );
+      pointer-events: none; z-index: 90;
+    }
+
+    /* Vignette */
+    #vignette {
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.8) 100%);
+      pointer-events: none; z-index: 80;
+    }
+  </style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<svg id="balloons" xmlns="http://www.w3.org/2000/svg"></svg>
+
+<div id="scene">
+  <div class="title-wrap">
+    <h1 class="title">
+      <span class="line1">PALLE</span>
+      <span class="line2">SGONFIE</span>
+    </h1>
+    <p class="subtitle">— un capolavoro dell'aria che manca —</p>
+  </div>
+</div>
+
+<script>
+  // ─── Cursor ─────────────────────────────────────────────────────────
+  const cursor = document.getElementById('cursor');
+  let mx = window.innerWidth/2, my = window.innerHeight/2;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.left = mx + 'px';
+    cursor.style.top = my + 'px';
+  });
+
+  // ─── Balloon System ──────────────────────────────────────────────────
+  const svg = document.getElementById('balloons');
+  const W = () => window.innerWidth;
+  const H = () => window.innerHeight;
+
+  const COLORS = ['#e8c84a','#e84a6f','#4ae8c8','#a84ae8','#e8824a'];
+  const balloons = [];
+
+  function rand(a, b) { return a + Math.random() * (b - a); }
+
+  class Balloon {
+    constructor() {
+      this.reset(true);
+      this.group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      this.body = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+      this.sheen = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+      this.string = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      this.group.appendChild(this.string);
+      this.group.appendChild(this.body);
+      this.group.appendChild(this.sheen);
+      svg.appendChild(this.group);
+      this.deflated = false;
+      this.popRadius = 0;
+    }
+
+    reset(initial = false) {
+      this.x = rand(60, W() - 60);
+      this.y = initial ? rand(H() * 0.3, H() + 200) : H() + rand(80, 200);
+      this.speed = rand(0.4, 1.1);
+      this.wobble = rand(0, Math.PI * 2);
+      this.wobbleSpeed = rand(0.01, 0.03);
+      this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+      // Balloon size — mix of normal & semi-deflated
+      this.fullRX = rand(22, 46);
+      this.fullRY = rand(26, 56);
+      this.deflateLevel = rand(0, 1); // 0=full, 1=flat
+      this.updateSize();
+      this.alpha = rand(0.5, 0.9);
+      this.wrinkle = this.deflateLevel > 0.5;
+    }
+
+    updateSize() {
+      this.rx = this.fullRX * (1 - this.deflateLevel * 0.55);
+      this.ry = this.fullRY * (1 - this.deflateLevel * 0.70);
+    }
+
+    draw() {
+      const wx = Math.sin(this.wobble) * 12;
+
+      // Body
+      this.body.setAttribute('cx', this.x + wx);
+      this.body.setAttribute('cy', this.y);
+      this.body.setAttribute('rx', this.rx);
+      this.body.setAttribute('ry', this.ry);
+      this.body.setAttribute('fill', this.color);
+      this.body.setAttribute('opacity', this.alpha * (1 - this.deflateLevel * 0.3));
+
+      // Wrinkle effect via filter (deflated balloons look squished)
+      if (this.wrinkle) {
+        this.body.setAttribute('filter', 'url(#wrinkle)');
+      }
+
+      // Sheen
+      this.sheen.setAttribute('cx', this.x + wx - this.rx * 0.25);
+      this.sheen.setAttribute('cy', this.y - this.ry * 0.3);
+      this.sheen.setAttribute('rx', this.rx * 0.25);
+      this.sheen.setAttribute('ry', this.ry * 0.2);
+      this.sheen.setAttribute('fill', 'rgba(255,255,255,0.25)');
+      this.sheen.setAttribute('opacity', 1 - this.deflateLevel * 0.8);
+
+      // String — wobbly for deflated
+      const sx = this.x + wx;
+      const sy = this.y + this.ry;
+      const ey = sy + rand(30, 60);
+      const cp1x = sx + rand(-15, 15);
+      const cp2x = sx + rand(-15, 15);
+      this.string.setAttribute('d', `M${sx},${sy} C${cp1x},${sy+20} ${cp2x},${ey-10} ${sx},${ey}`);
+      this.string.setAttribute('stroke', this.color);
+      this.string.setAttribute('stroke-width', '1.5');
+      this.string.setAttribute('fill', 'none');
+      this.string.setAttribute('opacity', '0.5');
+    }
+
+    update() {
+      if (this.deflated) {
+        // Deflating: wander sideways and fall
+        this.x += Math.sin(this.wobble * 3) * 3;
+        this.y += 2 + this.deflateLevel * 4;
+        this.deflateLevel = Math.min(1, this.deflateLevel + 0.018);
+        this.alpha -= 0.012;
+        this.updateSize();
+        if (this.alpha <= 0 || this.y > H() + 200) { this.reset(); this.deflated = false; }
+      } else {
+        this.y -= this.speed;
+        this.wobble += this.wobbleSpeed;
+      }
+      if (this.y < -200) this.reset();
+      this.draw();
+    }
+
+    hitTest(px, py) {
+      const wx = Math.sin(this.wobble) * 12;
+      const dx = (px - (this.x + wx)) / this.rx;
+      const dy = (py - this.y) / this.ry;
+      return dx * dx + dy * dy < 1.3;
+    }
+
+    pop(px, py) {
+      if (this.deflated) return;
+      this.deflated = true;
+      spawnFlash(px, py, this.color);
+      spawnAirParticles(px, py);
+    }
+  }
+
+  // ─── SVG Filters ────────────────────────────────────────────────────
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  defs.innerHTML = `
+    <filter id="wrinkle" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="turbulence" baseFrequency="0.08" numOctaves="3" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="6" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#12121f"/>
+      <stop offset="100%" stop-color="#05050a"/>
+    </radialGradient>
+  `;
+  svg.appendChild(defs);
+
+  // Background rect
+  const bgRect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  bgRect.setAttribute('width','100%'); bgRect.setAttribute('height','100%');
+  bgRect.setAttribute('fill','url(#bgGrad)');
+  svg.insertBefore(bgRect, svg.firstChild);
+
+  // Spawn balloons
+  for (let i = 0; i < 18; i++) balloons.push(new Balloon());
+
+  // ─── Click to pop ───────────────────────────────────────────────────
+  document.addEventListener('click', e => {
+    let popped = false;
+    for (let i = balloons.length - 1; i >= 0; i--) {
+      if (balloons[i].hitTest(e.clientX, e.clientY)) {
+        balloons[i].pop(e.clientX, e.clientY);
+        popped = true;
+        break;
+      }
+    }
+  });
+
+  document.addEventListener('mousedown', () => cursor.classList.add('pop'));
+  document.addEventListener('mouseup', () => cursor.classList.remove('pop'));
+
+  // ─── Flash ──────────────────────────────────────────────────────────
+  function spawnFlash(x, y, color) {
+    const el = document.createElement('div');
+    el.className = 'flash';
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.style.width = '60px'; el.style.height = '60px';
+    el.style.background = color;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 600);
+  }
+
+  // ─── Air particles ──────────────────────────────────────────────────
+  function spawnAirParticles(x, y) {
+    for (let i = 0; i < 10; i++) {
+      const el = document.createElement('div');
+      el.className = 'particle';
+      const size = rand(3, 8);
+      el.style.cssText = `
+        left:${x}px; top:${y}px;
+        width:${size}px; height:${size}px;
+        background: rgba(255,255,255,${rand(0.3,0.7)});
+        --tx:${rand(-80,80)}px;
+        --ty:${rand(-120,-20)}px;
+        --dur:${rand(0.5,1.2)}s;
+        --delay:${rand(0,0.2)}s;
+      `;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1400);
+    }
+  }
+
+  // ─── Ambient air leaks (random deflation sounds visual) ─────────────
+  setInterval(() => {
+    const b = balloons[Math.floor(Math.random() * balloons.length)];
+    if (!b.deflated && b.deflateLevel < 0.3) {
+      b.deflateLevel += rand(0.02, 0.08);
+      b.updateSize();
+      b.wrinkle = b.deflateLevel > 0.4;
+    }
+  }, 800);
+
+  // ─── Animation loop ─────────────────────────────────────────────────
+  function loop() {
+    balloons.forEach(b => b.update());
+    requestAnimationFrame(loop);
+  }
+  loop();
+
+  // ─── Resize ─────────────────────────────────────────────────────────
+  window.addEventListener('resize', () => {
+    balloons.forEach(b => {
+      if (b.x > W()) b.x = W() - 60;
+    });
+  });
+</script>
+</body>
+</html>
