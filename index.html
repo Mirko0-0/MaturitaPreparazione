@@ -243,7 +243,7 @@ function triggerExplosion() {
   }, 400);
 
   // Display text cycle
-  const displayTexts = ['67','SESSANTASETTE','67','THE NUMBER','67','EXPLODE','67','❗67❗'];
+  const displayTexts = ['67','SESSANTASETTE','67','THE NUMBER','67','TUFF','67','❗67❗'];
   let dtIdx = 0;
   const textCycle = setInterval(() => {
     display.textContent    = displayTexts[dtIdx % displayTexts.length];
@@ -267,11 +267,9 @@ function startClosing() {
   overlay.classList.add('show');
 
   const lines = [
-    'hai trovato il 67.',
+    'hai scoperto il segreto.',
     'nessuno doveva sapere.',
     'addio.',
-    '',
-    'chiusura in corso',
   ];
 
   let li = 0;
